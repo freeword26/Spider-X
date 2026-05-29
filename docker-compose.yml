@@ -1,34 +1,28 @@
-version: '3.8'
-
 services:
   worker-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: worker-api
+    container_name: spider-x-api
     restart: always
     ports:
       - "8006:8006"
     environment:
-      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_HOST=host.docker.internal
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
-      - REDIS_HOST=redis
+      - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6383
-      - API_PORT=8006
+      - SPIDER_X_API_PORT=8006
       - TZ=Asia/Shanghai
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./src:/app/src:ro
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - worker-network
+      - ./spider_x:/app/spider_x:ro
+      - ./config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
       interval: 30s
@@ -39,75 +33,23 @@ services:
   worker-node:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: worker-node
+      dockerfile: Dockerfile.worker
     restart: always
     environment:
-      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_HOST=host.docker.internal
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
-      - REDIS_HOST=redis
+      - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6383
       - NODE_TYPE=worker
       - TZ=Asia/Shanghai
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./src:/app/src:ro
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - worker-network
+      - ./spider_x:/app/spider_x:ro
+      - ./config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       replicas: 2
-
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    container_name: worker-rabbitmq
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - worker-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
-  redis:
-    image: redis:7-alpine
-    container_name: worker-redis
-    restart: always
-    ports:
-      - "6383:6383"
-    command: redis-server --port 6383 --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis-data:/data
-    networks:
-      - worker-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6383", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-
-networks:
-  worker-network:
-    driver: bridge
-
-volumes:
-  rabbitmq-data:
-  redis-data:

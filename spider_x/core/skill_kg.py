@@ -28,10 +28,10 @@ class KGEdge:
 
 
 class SkillKnowledgeGraph:
-    def __init__(self, neo4j_uri: str = "bolt://neo4j:7687"):
+    def __init__(self, neo4j_uri: str = "bolt://neo4j:7687", neo4j_user: str = "neo4j", neo4j_password: str = "password"):
         self.neo4j_uri = neo4j_uri
-        self.neo4j_user = "neo4j"
-        self.neo4j_password = "password"
+        self.neo4j_user = neo4j_user
+        self.neo4j_password = neo4j_password
         self._nodes: Dict[str, KGNode] = {}
         self._edges: List[KGEdge] = []
         self._adjacency: Dict[str, List[KGEdge]] = defaultdict(list)

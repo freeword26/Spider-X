@@ -31,7 +31,7 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     plug = PluginManager(plugin_dir=cfg.plugin_dir)
     slock = LOCKSSChecker()
     sgnn = SkillCombinatorGNN()
-    skg = SkillKnowledgeGraph(uri=cfg.neo4j_uri, user=cfg.neo4j_user, pwd=cfg.neo4j_password)
+    skg = SkillKnowledgeGraph(neo4j_uri=cfg.neo4j_uri, neo4j_user=cfg.neo4j_user, neo4j_password=cfg.neo4j_password)
     import os
     wuip = cfg.webui_path if cfg.webui_path and os.path.isdir(cfg.webui_path) else None
     from spider_x.core.task import registry, Task, TaskPriority, TaskStatus

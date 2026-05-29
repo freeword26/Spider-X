@@ -1,0 +1,14 @@
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+*.egg-info
+.git
+.gitignore
+.pytest_cache
+tests/
+docs/
+data/
+logs/
+.DS_Store
+Thumbs.b
