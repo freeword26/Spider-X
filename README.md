@@ -1,259 +1,112 @@
 # 🕷️ Spider-X 蜘蛛群
 
-**Worker智能体集群引擎** — 兼容全部Spider系列
+**Worker 智能体集群引擎** — 服务端完整版
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](.)
-[![Python](https://img.shields.io/badge/python-≥3.10-green)](.)
-[![License](https://img.shields.io/badge/license-MIT-yellow)](.)
+> 提供完整 REST API、WebUI 控制台、三因子调度、技能图谱。适合部署为中央调度服务。
 
----
+## 是什么
 
-## 概述
-
-Spider-X（蜘蛛群）是一个高性能的Worker智能体集群引擎，提供任务调度、SOP编排、技能图谱、插件管理等核心能力。设计为Spider系列生态的执行层，与所有Spider项目无缝集成。
-
-```
-                    spider.py (统一网关)
-                   /    |     |      \       \
-                  /     |     |       \       \
-          spider_max    |     |        \     spider-x ◄── 蜘蛛群
-         (大蜘蛛v3)     |     |         \   (Worker集群)
-         Full-stack PM  |     |          \
-                        |   小蜘蛛日历v1   mini_spider
-                        |   (Spider Diary)  (小蜘蛛空间v3)
-                        |
-              大蜘蛛空间_V2.0
-             (Spider MAX Room)
-```
-
-## 快速安装
-
-```bash
-# 从源码安装
-cd Spider-X
-pip install -e .
-
-# 安装全部可选依赖
-pip install -e ".[all]"
-
-# 开发模式
-pip install -e ".[dev]"
-```
+Spider-X 是 Spider 系列生态的**中央调度引擎**，负责：
+- 接收任务 → 分解 → 调度 → 执行 → 审计
+- 管理智能体集群（注册、心跳、负载均衡）
+- 编排 SOP 流水线（顺序/并行/重试）
+- 桥接 mini_spider / spider_max / spidermax_room / spider_diary
 
 ## 快速开始
 
-### 作为库使用
-
-```python
-import spider_x
-
-# 创建应用
-app = spider_x.create_app()
-
-# 或使用自定义配置
-from spider_x.core.config import SpiderXConfig
-config = SpiderXConfig(api={"port": 8080})
-app = spider_x.create_app(config=config)
-```
-
-### 作为服务运行
-
 ```bash
-# 启动API服务器
+pip install -e .
 spider-x serve --port 8006
-
-# 启动Worker节点
-spider-x worker --rabbitmq-url amqp://guest:guest@localhost:5672
-
-# 查看版本
-spider-x version
 ```
 
-### Docker运行
+## API 一览
 
-```bash
-docker build -t spider-x .
-docker run -p 8006:8006 spider-x
-```
+| 端点 | 作用 |
+|------|------|
+| `GET /health` | 健康检查（含集群状态） |
+| `POST /tasks/submit` | 提交任务 |
+| `GET /tasks/{id}` | 查询任务 |
+| `POST /api/v1/sop/pipelines` | 创建 SOP 流水线 |
+| `POST /api/v1/sop/execute/{id}` | 执行流水线 |
+| `POST /api/v2/agents/register` | 注册智能体 |
+| `GET /api/v2/agents` | 查看集群 |
+| `GET /api/v2/cluster/summary` | 集群概览 |
+| `GET /api/v3/gnn/discover` | GNN 技能组合发现 |
+| `POST /api/v3/skills/check` | 技能冲突检测 |
 
-## 兼容Spider系列
+## 模块说明
 
-| 系统 | 版本 | 中文说明 | 集成方式 |
-|------|------|----------|----------|
-| mini_spider | v3.0 | 小蜘蛛空间 - 多Agent框架 | `MiniSpiderAdapter` |
-| spider_max | v3.0 | 大蜘蛛 - 全栈项目管理平台 | `SpiderMaxAdapter` |
-| spider_max_room | v2.0 | 大蜘蛛空间 - 无人值守工作流 | `SpiderRoomAdapter` |
-| spider_diary | v1.0 | 小蜘蛛日历 - 运维报告引擎 | `SpiderDiaryAdapter` |
-| **spider-x** | **v1.0** | **蜘蛛群 - Worker智能体集群引擎** | **核心引擎** |
+### 核心层 (`spider_x/core/`)
 
-## 核心特性
+| 模块 | 作用 |
+|------|------|
+| `app.py` | FastAPI 应用工厂，注册全部路由 |
+| `config.py` | 配置加载（Pydantic Settings，支持 .env） |
+| `credential_chain.py` | 凭证链（HMAC-SHA256 防篡改审计） |
+| `task.py` | 任务模型（状态/优先级/重试） |
+| `sop_engine.py` | SOP 流水线引擎（DAG 编排） |
+| `chaos_scheduler.py` | 混沌调度器（CPU/内存/能力 三因子评分 + bidding） |
+| `resource_state.py` | 智能体集群状态管理（注册/心跳/TTL 过期） |
+| `atomic_action.py` | 任务分解（复合任务 → 原子动作序列） |
+| `subgraph.py` | 子图封装（协作模式发现 → 虚拟超智能体） |
+| `plugin.py` | 插件管理（OCI/WASI/本地三种部署） |
+| `skill_lock.py` | 技能锁（并发技能冲突检测） |
+| `skill_gnn.py` | GNN 技能组合推荐 |
+| `skill_kg.py` | 技能知识图谱（Neo4j 持久化） |
+| `worker.py` | Worker 节点与任务提交 |
+| `observability.py` | OpenTelemetry 链路追踪 |
 
-### 🔗 凭证链 (Credential Chain)
-- HMAC-SHA256签名防篡改
-- 链式哈希链接（类似区块链结构）
-- 支持完整性校验
-- 每次SOP执行自动生成完整审计链
+### 适配器 (`spider_x/adapters/`)
 
-### 📋 SOP引擎
-- 基于依赖图的顺序/并行执行
-- 支持重试机制
-- 失败传播与隔离
-- 执行报告自动生成
+| 模块 | 桥接目标 |
+|------|----------|
+| `mini_spider.py` | mini_spider v3 多智能体框架 |
+| `spider_max.py` | spider_max 项目管理平台 |
+| `spider_room.py` | spidermax_room 工作流引擎 |
+| `spider_diary.py` | spider_diary 运维报告引擎 |
 
-### 🔄 混沌调度器 (Chaos Scheduler)
-- Token Bucket流量控制
-- 竞价机制（可选）
-- 能力向量匹配
-- 负载感知分配
+### 技能系统 (`spider_x/skills/`)
 
-### 🧠 技能图谱
-- **GNN组合发现**: 基于图神经网络的技能组合路径发现
-- **LOCKSS互锁检查**: 技能作用域冲突检测与解决
-- **Neo4j知识图谱**: 支持持久化的技能关系图谱
-
-### 📦 插件系统
-- OCI容器部署
-- WASI沙箱部署
-- 本地进程部署
-- 能力契约注册
-
-### 📊 资源状态管理
-- Agent注册与心跳
-- 实时资源监控（CPU/内存/负载）
-- 集群概览
-- TTL过期自动下线
-
-### 📡 可观测性
-- OpenTelemetry集成（可选）
-- 分布式链路追踪
-- 指标收集
-- Noop降级模式
-
-## API端点
-
-### 核心
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/` | 服务信息 |
-| GET | `/health` | 健康检查 |
-| GET | `/handlers` | 列出任务处理器 |
-
-### 任务管理
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/tasks/submit` | 提交任务 |
-| GET | `/tasks/{id}` | 查询任务 |
-| GET | `/tasks` | 列出任务 |
-
-### 凭证链 (v1)
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/v1/report/latest` | 最新执行报告 |
-| GET | `/api/v1/credentials/chains` | 凭证链列表 |
-| GET | `/api/v1/credentials/chain/{id}` | 凭证链详情 |
-
-### SOP流水线 (v1)
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/v1/sop/pipelines` | 创建流水线 |
-| POST | `/api/v1/sop/execute/{id}` | 执行流水线 |
-| GET | `/api/v1/sop/pipelines` | 流水线列表 |
-
-### Agent管理 (v2)
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/v2/agents/register` | 注册Agent |
-| DELETE | `/api/v2/agents/{id}` | 注销Agent |
-| POST | `/api/v2/agents/{id}/heartbeat` | 心跳/状态更新 |
-| GET | `/api/v2/agents` | Agent列表 |
-| GET | `/api/v2/agents/available` | 可用Agent |
-| GET | `/api/v2/cluster/summary` | 集群概览 |
-
-### 技能图谱 (v3)
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/v3/gnn/discover` | GNN组合发现 |
-| GET | `/api/v3/gnn/recommend` | 技能推荐 |
-| POST | `/api/v3/skills/check` | 冲突检测 |
+| 模块 | 作用 |
+|------|------|
+| `builtin.py` | 14 个内置技能（echo/shell/python/http/file/research/code/review/test/clean/deploy/notify/brainstorm） |
+| `manifest.py` | 技能清单加载与校验 |
+| `index_brainstorm.py` | 多智能体索引头脑风暴（25 个 Agent 协作） |
 
 ## 配置
 
-通过环境变量或 `.env` 文件配置：
-
 ```env
-# 基础
-SPIDER_X_ENV=development
-SPIDER_X_DEBUG=true
-SPIDER_X_LOG_LEVEL=INFO
-
-# API
-SPIDER_X_API_HOST=0.0.0.0
 SPIDER_X_API_PORT=8006
-SPIDER_X_API_KEY=your-secret-key
-
-# RabbitMQ
+SPIDER_X_DEBUG=true
 SPIDER_X_RABBITMQ_HOST=localhost
 SPIDER_X_RABBITMQ_PORT=5672
-SPIDER_X_RABBITMQ_USER=guest
-SPIDER_X_RABBITMQ_PASSWORD=guest
-
-# Neo4j
 SPIDER_X_NEO4J_URI=bolt://localhost:7687
-SPIDER_X_NEO4J_USER=neo4j
-SPIDER_X_NEO4J_PASSWORD=password
-
-# OpenTelemetry
-SPIDER_X_OTEL_SERVICE_NAME=spider-x
 SPIDER_X_OTEL_ENDPOINT=http://otel-collector:4318
-
-# 安全
 SPIDER_X_CREDIFICATE_SECRET=your-hmac-secret
 ```
+
+## 运行测试
+
+```bash
+pip install -e ".[dev]"
+pytest tests/ -v
+```
+
+## 配套项目
+
+- **spider-x-worker** (`Spider-X-archive`) — 轻量 Worker 节点版，无 Pydantic 依赖，含 Click CLI、RabbitMQ 消费、区块链审计链。适合边缘部署。
 
 ## 架构
 
 ```
-spider_x/
-├── core/                    # 核心引擎
-│   ├── app.py              # FastAPI应用工厂
-│   ├── config.py           # 配置管理
-│   ├── task.py             # 任务定义与注册表
-│   ├── worker.py           # Worker节点与任务提交
-│   ├── credential_chain.py # 凭证链
-│   ├── sop_engine.py       # SOP流水线引擎
-│   ├── observability.py    # OpenTelemetry集成
-│   ├── resource_state.py   # Agent资源状态
-│   ├── atomic_action.py    # 任务分解
-│   ├── chaos_scheduler.py  # 混沌调度器
-│   ├── subgraph.py         # 子图封装/VSA
-│   ├── plugin.py           # 插件管理
-│   ├── skill_lock.py       # LOCKSS互锁检查
-│   ├── skill_gnn.py        # GNN技能组合
-│   └── skill_kg.py         # 技能知识图谱
-├── adapters/               # Spider系列适配器
-│   ├── mini_spider.py      # 小蜘蛛空间适配器
-│   ├── spider_max.py       # 大蜘蛛适配器
-│   ├── spider_room.py      # 大蜘蛛空间适配器
-│   └── spider_diary.py     # 小蜘蛛日历适配器
-├── skills/                 # 技能系统
-│   ├── manifest.py         # 技能清单
-│   └── builtin.py          # 内置技能
-└── cli.py                  # 命令行接口
-```
-
-## 开发
-
-```bash
-# 运行测试
-pytest tests/ -v
-
-# 代码检查
-ruff check spider_x/
-
-# 类型检查
-mypy spider_x/
+外部系统                  Spider-X (服务端)
+─────────                ──────────────────
+mini_spider       ──┐
+spider_max        ──┼──  adapters  ──→  core  ──→  FastAPI  ──→  WebUI
+spidermax_room    ──┤                  │
+spider_diary      ──┘                  └──  RabbitMQ  ←──  spider-x-worker
 ```
 
 ## 许可证
 
-MIT License
+MIT
