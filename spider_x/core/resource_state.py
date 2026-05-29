@@ -48,7 +48,7 @@ class ResourceState:
     def capacity_score(self) -> float:
         cpu_headroom = max(0, 100 - self.cpu_percent)
         mem_headroom = max(0, 100 - self.memory_percent)
-        load_factor = max(0, 1.0 - self.active_tasks / max(5, 1))
+        load_factor = max(0, 1.0 - self.active_tasks / max(1, getattr(self, 'max_concurrency', 5)))
         return (cpu_headroom * 0.4 + mem_headroom * 0.4 + load_factor * 20 * 0.2)
 
     @staticmethod
