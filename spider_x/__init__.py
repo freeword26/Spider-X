@@ -18,6 +18,11 @@ from spider_x.core.skill_gnn import SkillCombinatorGNN
 from spider_x.core.skill_kg import SkillKnowledgeGraph
 from spider_x.core.worker import WorkerNode, TaskSubmitter
 
+from spider_x.core.agent_registry import (
+    AgentRegistry, AgentDescriptor, PermissionLevel, CollaborationMode,
+    get_registry, call_agent, route, list_all, find,
+)
+
 from spider_x.adapters import MiniSpiderAdapter, SpiderMaxAdapter, SpiderRoomAdapter, SpiderDiaryAdapter
 from spider_x.skills import SkillManifest, register_builtin_skills, BUILTIN_SKILLS
 
@@ -35,4 +40,6 @@ __all__ = [
     "WorkerNode", "TaskSubmitter",
     "MiniSpiderAdapter", "SpiderMaxAdapter", "SpiderRoomAdapter", "SpiderDiaryAdapter",
     "SkillManifest", "register_builtin_skills", "BUILTIN_SKILLS",
+    "AgentRegistry", "AgentDescriptor", "PermissionLevel", "CollaborationMode",
+    "get_registry", "call_agent", "route", "list_all", "find",
 ]

@@ -49,6 +49,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "组织讨论、确保各视角被听取、综合共识",
         "skills": ["multi_agent_index_brainstorm", "research", "review", "notify", "echo"],
+                    "keywords": ["系统", "全局", "协调", "调度", "运维", "组织", "综合"],
         "analysis_fn": "_coordination_analysis",
     },
     "architect-agent": {
@@ -58,6 +59,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "系统架构设计、技术选型、架构评审",
         "skills": ["multi_agent_index_brainstorm", "code", "review", "research", "deploy"],
+                    "keywords": ["架构", "设计", "技术选型", "评审", "系统结构"],
         "analysis_fn": "_architecture_analysis",
     },
 
@@ -69,6 +71,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "向量数据库同步、存储维护、LangChain编排",
         "skills": ["python", "http_request", "file_read", "file_write", "research"],
+                    "keywords": ["LangChain", "编排", "向量", "存储", "同步"],
         "analysis_fn": "_langchain_analysis",
     },
     "security-architect": {
@@ -78,6 +81,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "安全审查、权限边界管理、安全架构设计",
         "skills": ["review", "test", "shell", "file_read", "notify"],
+                    "keywords": ["安全", "审计", "权限", "威胁", "加密"],
         "analysis_fn": "_security_analysis",
     },
     "tech-expert": {
@@ -87,6 +91,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "分析技术可行性、代码结构索引、性能优化",
         "skills": ["multi_agent_index_brainstorm", "code", "review", "test", "python", "shell"],
+                    "keywords": ["技术", "代码", "性能", "优化", "可行性"],
         "analysis_fn": "_tech_analysis",
     },
     "master-mentor": {
@@ -96,6 +101,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "自适应学习、技能培训、知识传授",
         "skills": ["research", "code", "review", "notify", "echo"],
+                    "keywords": ["指导", "培训", "学习", "知识", "自适应"],
         "analysis_fn": "_mentor_analysis",
     },
 
@@ -107,6 +113,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "评估数据类型、元数据质量、搜索模式、数据建模",
         "skills": ["multi_agent_index_brainstorm", "python", "research", "file_read", "file_write"],
+                    "keywords": ["数据", "分析", "建模", "统计", "元数据"],
         "analysis_fn": "_data_analysis",
     },
     "analyst": {
@@ -116,6 +123,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "数据分析、场景建模、业务洞察",
         "skills": ["research", "python", "file_read", "review"],
+                    "keywords": ["分析", "报告", "决策", "洞察", "数据"],
         "analysis_fn": "_analyst_analysis",
     },
     "developer": {
@@ -125,6 +133,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "代码开发、快反开发模式、技术实现",
         "skills": ["code", "python", "test", "review", "clean", "file_write", "file_read"],
+                    "keywords": ["开发", "编码", "实现", "API", "脚本"],
         "analysis_fn": "_developer_analysis",
     },
     "devops": {
@@ -134,6 +143,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "CI/CD、部署监控、GitHub同步、基础设施",
         "skills": ["deploy", "shell", "python", "http_request", "notify", "test"],
+                    "keywords": ["部署", "CI/CD", "运维", "Docker", "监控"],
         "analysis_fn": "_devops_analysis",
     },
     "qa": {
@@ -143,6 +153,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "测试验证、质量保障、用例设计",
         "skills": ["test", "review", "python", "file_read", "notify"],
+                    "keywords": ["测试", "质量", "缺陷", "验证", "检查"],
         "analysis_fn": "_qa_analysis",
     },
     "product-manager": {
@@ -152,6 +163,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "需求分析、用户故事、验收标准、用户体验",
         "skills": ["multi_agent_index_brainstorm", "research", "review", "notify"],
+                    "keywords": ["产品", "需求", "用户", "功能", "规划"],
         "analysis_fn": "_ux_analysis",
     },
     "project-manager": {
@@ -161,6 +173,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "项目看板管理、进度汇报、OKR跟踪",
         "skills": ["research", "review", "notify", "file_read", "file_write"],
+                    "keywords": ["项目", "进度", "里程碑", "任务", "协调"],
         "analysis_fn": "_pm_analysis",
     },
     "business": {
@@ -170,6 +183,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "业务流程、多元化知识、行业洞察",
         "skills": ["research", "review", "notify"],
+                    "keywords": ["业务", "流程", "模式", "市场"],
         "analysis_fn": "_business_expert_analysis",
     },
     "expert-biz-doctor": {
@@ -179,6 +193,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "业务流程诊断、风险评估、优化建议、ROI分析",
         "skills": ["multi_agent_index_brainstorm", "research", "review", "notify"],
+                    "keywords": ["商业", "战略", "ROI", "投资", "决策"],
         "analysis_fn": "_business_analysis",
     },
 
@@ -190,6 +205,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "识别交叉引用、重复模式、自适应学习",
         "skills": ["multi_agent_index_brainstorm", "research", "python", "file_read", "code"],
+                    "keywords": ["学习", "技能", "自动化", "向量化"],
         "analysis_fn": "_pattern_analysis",
     },
     "skill-manager": {
@@ -199,6 +215,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "审查现有技能、提出基于技能的索引方案、工具链设计",
         "skills": ["multi_agent_index_brainstorm", "research", "review", "file_read", "file_write"],
+                    "keywords": ["技能", "注册", "版本", "依赖", "映射"],
         "analysis_fn": "_skill_analysis",
     },
     "memory-butler": {
@@ -208,6 +225,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "全局状态管理、记忆库维护、上下文追踪",
         "skills": ["file_read", "file_write", "research", "echo"],
+                    "keywords": ["记忆", "上下文", "检索", "历史"],
         "analysis_fn": "_memory_analysis",
     },
     "trend-forecast": {
@@ -217,6 +235,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "趋势分析、数据可视化、预测建模",
         "skills": ["python", "research", "file_read", "file_write"],
+                    "keywords": ["趋势", "预测", "前瞻", "规划"],
         "analysis_fn": "_trend_analysis",
     },
     "math-professor": {
@@ -226,6 +245,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-reasoner",
         "responsibility": "逻辑一致性检查、数据库设计、算法复杂度、形式化验证",
         "skills": ["multi_agent_index_brainstorm", "python", "review", "research"],
+                    "keywords": ["优化", "成本", "效率", "数学", "算法"],
         "analysis_fn": "_logic_analysis",
     },
     "humanities-scholar": {
@@ -235,6 +255,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "知识库索引、人文知识管理、文档分析",
         "skills": ["research", "file_read", "review", "echo"],
+                    "keywords": ["文档", "语义", "文本", "文史", "知识"],
         "analysis_fn": "_humanities_analysis",
     },
     "wen-shi-expert": {
@@ -244,6 +265,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "多元文化知识库、人文研究、文化研究",
         "skills": ["research", "file_read", "review"],
+                    "keywords": ["知识库", "知识图谱", "语义", "管理"],
         "analysis_fn": "_culture_analysis",
     },
 
@@ -255,6 +277,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "系统清理、临时文件管理、资源回收",
         "skills": ["clean", "shell", "file_read", "file_write"],
+                    "keywords": ["清理", "资源回收", "维护", "整理"],
         "analysis_fn": "_janitor_analysis",
     },
     "indexer-agent": {
@@ -264,6 +287,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "文件索引构建、索引维护、索引优化",
         "skills": ["file_read", "file_write", "python", "shell", "research"],
+                    "keywords": ["索引", "文件", "搜索", "分类", "构建"],
         "analysis_fn": "_indexer_analysis",
     },
     "archiver-agent": {
@@ -273,6 +297,7 @@ AGENT_ROLES: Dict[str, Dict[str, Any]] = {
         "model": "deepseek-chat",
         "responsibility": "数据归档、备份管理、历史数据维护",
         "skills": ["file_read", "file_write", "shell", "deploy"],
+                    "keywords": ["归档", "备份", "数据", "存储", "版本"],
         "analysis_fn": "_archiver_analysis",
     },
 }

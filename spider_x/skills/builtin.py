@@ -20,7 +20,12 @@ BUILTIN_SKILLS = [
     {"skill_id": "clean", "name": "Clean", "category": "workflow", "compatible_spiders": ["*"]},
     {"skill_id": "deploy", "name": "Deploy", "category": "workflow", "compatible_spiders": ["*"]},
     {"skill_id": "notify", "name": "Notify", "category": "workflow", "compatible_spiders": ["*"]},
+    {"skill_id": "multi_agent_index_brainstorm", "name": "Index Brainstorm", "category": "workflow", "compatible_spiders": ["*"]},
 ]
+
+async def _brainstorm(t):
+    from spider_x.skills.index_brainstorm import handle_index_brainstorm
+    return await handle_index_brainstorm(t)
 
 async def _echo(t): return {"echo": t.payload.get("message", ""), "time": datetime.now().isoformat()}
 async def _shell(t):
@@ -48,7 +53,8 @@ async def _fr(t):
 async def _stub(t): return {"status": "ok", "skill": t.task_type}
 
 _HANDLERS = {"echo": _echo, "shell": _shell, "python": _python, "http_request": _http, "file_write": _fw, "file_read": _fr,
-             "research": _stub, "code": _stub, "review": _stub, "test": _stub, "clean": _stub, "deploy": _stub, "notify": _stub}
+             "research": _stub, "code": _stub, "review": _stub, "test": _stub, "clean": _stub, "deploy": _stub, "notify": _stub,
+             "multi_agent_index_brainstorm": _brainstorm}
 
 def register_builtin_skills(reg: Any) -> int:
     for tt, h in _HANDLERS.items(): reg.register(tt)(h)
