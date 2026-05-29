@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务执行报告 - Worker集群 1.0</title>
+<style>
+:root { --bg:#0f172a; --surface:#1e293b; --border:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6; --success:#22c55e; --error:#ef4444; --warning:#f59e0b; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px 16px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:24px}
+.header h1{font-size:1.4rem;color:var(--accent)}
+.badge{padding:4px 12px;border-radius:12px;font-size:0.75rem;font-weight:600}
+.badge.success{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.3)}
+.badge.error{background:rgba(239,68,68,.15);color:var(--error);border:1px solid rgba(239,68,68,.3)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h2{font-size:1rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.field{padding:8px 0}
+.field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:4px}
+.field .value{font-size:.9rem;font-family:'Consolas',monospace;word-break:break-all}
+.value.success{color:var(--success)}
+.value.error{color:var(--error)}
+.hash{font-family:'Consolas',monospace;font-size:.75rem;background:rgba(59,130,246,.1);padding:2px 6px;border-radius:4px;color:var(--accent)}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;padding-bottom:20px}
+.tl-item::before{content:'';position:absolute;left:-24px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--success);border:2px solid var(--surface)}
+.tl-item.failed::before{background:var(--error)}
+.tl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tl-step{font-weight:600;font-size:.85rem}
+.tl-act{font-size:.75rem;color:var(--muted);font-family:'Consolas',monospace}
+.tl-body{font-size:.8rem;color:var(--muted)}
+.tl-body details{margin-top:4px}
+.tl-body summary{cursor:pointer;color:var(--accent);font-size:.75rem}
+.tl-body pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;margin-top:4px;font-size:.72rem;overflow-x:auto;color:var(--text)}
+.verify-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;margin-bottom:16px;font-size:.85rem;font-weight:500}
+.verify-bar.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+.verify-bar.fail{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--error)}
+.refresh-btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.85rem}
+.refresh-btn:hover{opacity:.85}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🔒 任务执行报告</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="report-badge" class="badge">加载中...</span>
+      <button class="refresh-btn" onclick="loadReport()">刷新</button>
+    </div>
+  </div>
+
+  <div id="verify-bar" class="verify-bar ok" style="display:none"></div>
+
+  <div class="card">
+    <h2>执行摘要</h2>
+    <div class="grid">
+      <div class="field"><label>任务 ID</label><div class="value" id="task-id">-</div></div>
+      <div class="field"><label>任务类型</label><div class="value" id="task-type">-</div></div>
+      <div class="field"><label>执行状态</label><div class="value" id="task-status">-</div></div>
+      <div class="field"><label>总步骤数</label><div class="value" id="total-steps">-</div></div>
+      <div class="field"><label>开始时间</label><div class="value" id="start-time">-</div></div>
+      <div class="field"><label>完成时间</label><div class="value" id="end-time">-</div></div>
+      <div class="field"><label>链路哈希</label><div class="hash" id="chain-hash">-</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>凭证链时间线</h2>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <div class="card">
+    <h2>凭证链 JSON</h2>
+    <pre id="raw-json" style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;overflow-x:auto;max-height:400px"></pre>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1';
+
+function el(id){return document.getElementById(id)}
+
+async function fetchJSON(url){
+  try{const r=await fetch(url);return await r.json()}catch(e){return null}
+}
+
+function loadDemoData(){
+  return {
+    pipeline:{
+      pipeline_id:'pipeline-demo-001',name:'示例SOP流水线',status:'completed',
+      created_at:'2026-05-28T10:00:00',started_at:'2026-05-28T10:00:01',completed_at:'2026-05-28T10:00:05',
+      steps:[
+        {step_id:'s1',name:'数据检索',action:'researcher',status:'completed',result:{docs:5},error:null,started_at:'2026-05-28T10:00:01',completed_at:'2026-05-28T10:00:02'},
+        {step_id:'s2',name:'代码实现',action:'coder',status:'completed',result:{lines:120},error:null,started_at:'2026-05-28T10:00:02',completed_at:'2026-05-28T10:00:04'},
+        {step_id:'s3',name:'清理验证',action:'cleaner',status:'completed',result:{cleaned:3},error:null,started_at:'2026-05-28T10:00:04',completed_at:'2026-05-28T10:00:05'}
+      ]
+    },
+    credential_chain:{
+      chain_id:'chain-demo-001',version:'1.0',task_id:'pipeline-demo-001',task_type:'sop:demo',
+      entries:[
+        {entry_id:'c1',step_index:0,action:'researcher',input_hash:'a1b2...',output_digest:'c3d4...',timestamp:'2026-05-28T10:00:02',signature:'sig1',metadata:{worker_id:'worker-01',status:'success'}},
+        {entry_id:'c2',step_index:1,action:'coder',input_hash:'e5f6...',output_digest:'g7h8...',timestamp:'2026-05-28T10:00:04',signature:'sig2',prev_hash:'h1',metadata:{worker_id:'worker-02',status:'success'}},
+        {entry_id:'c3',step_index:2,action:'cleaner',input_hash:'i9j0...',output_digest:'k1l2...',timestamp:'2026-05-28T10:00:05',signature:'sig3',prev_hash:'h2',metadata:{worker_id:'worker-03',status:'success'}}
+      ],
+      created_at:'2026-05-28T10:00:00',completed_at:'2026-05-28T10:00:05',
+      chain_hash:'chain-hash-demo-abc123'
+    },
+    verified:true
+  };
+}
+
+async function loadReport(){
+  const badge = el('report-badge');
+  badge.className = 'badge'; badge.textContent = '加载中...';
+
+  let data = await fetchJSON(`${API}/report/latest`);
+  if(!data){ data = loadDemoData(); badge.textContent = '演示模式'; badge.className = 'badge error'; }
+  else { badge.textContent = data.pipeline?.status === 'completed' ? '已完成' : '执行中'; badge.className = data.pipeline?.status === 'completed' ? 'badge success' : 'badge error'; }
+
+  const p = data.pipeline || {};
+  const c = data.credential_chain || {};
+
+  el('task-id').textContent = p.pipeline_id || '-';
+  el('task-type').textContent = p.name || '-';
+  el('task-status').textContent = p.status || '-';
+  el('task-status').className = 'value ' + (p.status === 'completed' ? 'success' : 'error');
+  el('total-steps').textContent = (p.steps||[]).length;
+  el('start-time').textContent = p.started_at || '-';
+  el('end-time').textContent = p.completed_at || '-';
+  el('chain-hash').textContent = c.chain_hash || '-';
+
+  const vb = el('verify-bar');
+  vb.style.display = 'flex';
+  if(data.verified){ vb.className = 'verify-bar ok'; vb.innerHTML = '✅ 凭证链校验通过 — 防篡改验证成功' }
+  else { vb.className = 'verify-bar fail'; vb.innerHTML = '❌ 凭证链校验失败 — 数据可能已被篡改' }
+
+  const tl = el('timeline'); tl.innerHTML = '';
+  const entries = c.entries || [];
+  const steps = p.steps || [];
+  for(let i=0;i<Math.max(entries.length,steps.length);i++){
+    const e = entries[i] || {}; const s = steps[i] || {};
+    const isFail = e.metadata?.status === 'failed' || s.status === 'failed';
+    const item = document.createElement('div'); item.className = 'tl-item' + (isFail?' failed':'');
+    item.innerHTML = `<div class="tl-head"><span class="tl-step">${s.step||e.action||'step-'+i}</span><span class="tl-act">${e.timestamp||''}</span></div><div class="tl-body"><div>输入哈希: <span class="hash">${(e.input_hash||'-').substring(0,16)}...</span></div><div>输出摘要: <span class="hash">${(e.output_digest||'-').substring(0,16)}...</span></div>${e.metadata ? `<details><summary>元数据</summary><pre>${JSON.stringify(e.metadata,null,2)}</pre></details>` : ''}${s.result ? `<details><summary>执行结果</summary><pre>${JSON.stringify(s.result,null,2)}</pre></details>` : ''}</div>`;
+    tl.appendChild(item);
+  }
+
+  el('raw-json').textContent = JSON.stringify({pipeline:p,credential_chain:c,verified:data.verified},null,2);
+}
+
+loadReport();
+</script>
+</body>
+</html>

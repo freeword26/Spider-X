@@ -1,0 +1,251 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "generated_at": "2026-05-28",
+    "description": "Spider系列技能- Agent 完整索引",
+    "total_agents": 25,
+    "total_skills": 15
+  },
+  "agents": {
+    "L4_management": {
+      "system-manager": {
+        "name": "系统经理",
+        "role": "Orchestrator",
+        "skills": ["multi_agent_index_brainstorm", "research", "review", "notify", "echo"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "architect-agent": {
+        "name": "架构师",
+        "role": "Architect",
+        "skills": ["multi_agent_index_brainstorm", "code", "review", "research", "deploy"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      }
+    },
+    "L3_execution": {
+      "langchain-orchestrator": {
+        "name": "LangChain编排器",
+        "role": "Orchestrator",
+        "skills": ["python", "http_request", "file_read", "file_write", "research"],
+        "primary_skill": "python"
+      },
+      "security-architect": {
+        "name": "安全架构师",
+        "role": "Security",
+        "skills": ["review", "test", "shell", "file_read", "notify"],
+        "primary_skill": "review"
+      },
+      "tech-expert": {
+        "name": "技术专家",
+        "role": "Technical Lead",
+        "skills": ["multi_agent_index_brainstorm", "code", "review", "test", "python", "shell"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "master-mentor": {
+        "name": "大师导师",
+        "role": "Mentor",
+        "skills": ["research", "code", "review", "notify", "echo"],
+        "primary_skill": "research"
+      }
+    },
+    "L2_professional": {
+      "data-scientist": {
+        "name": "数据科学家",
+        "role": "Data Analyst",
+        "skills": ["multi_agent_index_brainstorm", "python", "research", "file_read", "file_write"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "analyst": {
+        "name": "分析师",
+        "role": "Analyst",
+        "skills": ["research", "python", "file_read", "review"],
+        "primary_skill": "research"
+      },
+      "developer": {
+        "name": "开发者",
+        "role": "Developer",
+        "skills": ["code", "python", "test", "review", "clean", "file_write", "file_read"],
+        "primary_skill": "code"
+      },
+      "devops": {
+        "name": "DevOps工程师",
+        "role": "DevOps",
+        "skills": ["deploy", "shell", "python", "http_request", "notify", "test"],
+        "primary_skill": "deploy"
+      },
+      "qa": {
+        "name": "测试工程师",
+        "role": "QA",
+        "skills": ["test", "review", "python", "file_read", "notify"],
+        "primary_skill": "test"
+      },
+      "product-manager": {
+        "name": "产品经理",
+        "role": "Product Manager",
+        "skills": ["multi_agent_index_brainstorm", "research", "review", "notify"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "project-manager": {
+        "name": "项目经理",
+        "role": "Project Manager",
+        "skills": ["research", "review", "notify", "file_read", "file_write"],
+        "primary_skill": "research"
+      },
+      "business": {
+        "name": "业务专家",
+        "role": "Business Expert",
+        "skills": ["research", "review", "notify"],
+        "primary_skill": "research"
+      },
+      "expert-biz-doctor": {
+        "name": "业务医生",
+        "role": "Business Doctor",
+        "skills": ["multi_agent_index_brainstorm", "research", "review", "notify"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      }
+    },
+    "L1_utility": {
+      "learning-hacker": {
+        "name": "学习黑客",
+        "role": "Pattern Finder",
+        "skills": ["multi_agent_index_brainstorm", "research", "python", "file_read", "code"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "skill-manager": {
+        "name": "技能管家",
+        "role": "Skill Architect",
+        "skills": ["multi_agent_index_brainstorm", "research", "review", "file_read", "file_write"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "memory-butler": {
+        "name": "记忆管家",
+        "role": "Memory Keeper",
+        "skills": ["file_read", "file_write", "research", "echo"],
+        "primary_skill": "file_read"
+      },
+      "trend-forecast": {
+        "name": "趋势预测师",
+        "role": "Forecaster",
+        "skills": ["python", "research", "file_read", "file_write"],
+        "primary_skill": "python"
+      },
+      "math-professor": {
+        "name": "数学教授",
+        "role": "Logic Expert",
+        "skills": ["multi_agent_index_brainstorm", "python", "review", "research"],
+        "primary_skill": "multi_agent_index_brainstorm"
+      },
+      "humanities-scholar": {
+        "name": "人文学者",
+        "role": "Humanities Scholar",
+        "skills": ["research", "file_read", "review", "echo"],
+        "primary_skill": "research"
+      },
+      "wen-shi-expert": {
+        "name": "文史专家",
+        "role": "Culture Expert",
+        "skills": ["research", "file_read", "review"],
+        "primary_skill": "research"
+      }
+    },
+    "meta": {
+      "janitor-agent": {
+        "name": "清洁Agent",
+        "role": "Janitor",
+        "skills": ["clean", "shell", "file_read", "file_write"],
+        "primary_skill": "clean"
+      },
+      "indexer-agent": {
+        "name": "索引Agent",
+        "role": "Indexer",
+        "skills": ["file_read", "file_write", "python", "shell", "research"],
+        "primary_skill": "file_read"
+      },
+      "archiver-agent": {
+        "name": "归档Agent",
+        "role": "Archiver",
+        "skills": ["file_read", "file_write", "shell", "deploy"],
+        "primary_skill": "file_write"
+      }
+    }
+  },
+  "skills": {
+    "multi_agent_index_brainstorm": {
+      "name": "Multi-Agent Index Brainstorm",
+      "alias": "小蜘蛛结网/Spider web",
+      "category": "collaboration",
+      "agents": ["system-manager", "architect-agent", "tech-expert", "data-scientist", "skill-manager", "learning-hacker", "product-manager", "math-professor", "expert-biz-doctor"]
+    },
+    "code": {
+      "name": "Code",
+      "category": "workflow",
+      "agents": ["architect-agent", "tech-expert", "developer", "learning-hacker"]
+    },
+    "review": {
+      "name": "Review",
+      "category": "workflow",
+      "agents": ["system-manager", "architect-agent", "security-architect", "tech-expert", "master-mentor", "analyst", "developer", "qa", "product-manager", "project-manager", "business", "expert-biz-doctor", "skill-manager", "math-professor", "humanities-scholar", "wen-shi-expert"]
+    },
+    "test": {
+      "name": "Test",
+      "category": "workflow",
+      "agents": ["security-architect", "tech-expert", "developer", "devops", "qa"]
+    },
+    "deploy": {
+      "name": "Deploy",
+      "category": "workflow",
+      "agents": ["architect-agent", "devops", "archiver-agent"]
+    },
+    "research": {
+      "name": "Research",
+      "category": "workflow",
+      "agents": ["system-manager", "architect-agent", "langchain-orchestrator", "master-mentor", "data-scientist", "analyst", "product-manager", "project-manager", "business", "expert-biz-doctor", "learning-hacker", "skill-manager", "memory-butler", "trend-forecast", "math-professor", "humanities-scholar", "wen-shi-expert", "indexer-agent"]
+    },
+    "clean": {
+      "name": "Clean",
+      "category": "workflow",
+      "agents": ["developer", "janitor-agent"]
+    },
+    "notify": {
+      "name": "Notify",
+      "category": "workflow",
+      "agents": ["system-manager", "security-architect", "master-mentor", "qa", "product-manager", "project-manager", "business", "expert-biz-doctor", "devops"]
+    },
+    "python": {
+      "name": "Python",
+      "category": "system",
+      "agents": ["langchain-orchestrator", "tech-expert", "data-scientist", "analyst", "developer", "devops", "qa", "learning-hacker", "trend-forecast", "math-professor", "indexer-agent"]
+    },
+    "shell": {
+      "name": "Shell",
+      "category": "system",
+      "agents": ["security-architect", "tech-expert", "devops", "janitor-agent", "indexer-agent", "archiver-agent"]
+    },
+    "http_request": {
+      "name": "HTTP Request",
+      "category": "network",
+      "agents": ["langchain-orchestrator", "devops"]
+    },
+    "file_read": {
+      "name": "File Read",
+      "category": "file",
+      "agents": ["langchain-orchestrator", "security-architect", "data-scientist", "analyst", "developer", "qa", "project-manager", "skill-manager", "memory-butler", "trend-forecast", "humanities-scholar", "wen-shi-expert", "janitor-agent", "indexer-agent", "archiver-agent"]
+    },
+    "file_write": {
+      "name": "File Write",
+      "category": "file",
+      "agents": ["langchain-orchestrator", "data-scientist", "developer", "skill-manager", "memory-butler", "trend-forecast", "project-manager", "janitor-agent", "indexer-agent", "archiver-agent"]
+    },
+    "echo": {
+      "name": "Echo",
+      "category": "utility",
+      "agents": ["system-manager", "master-mentor", "memory-butler", "humanities-scholar"]
+    }
+  },
+  "layer_summary": {
+    "L4": {"count": 2, "agents": ["system-manager", "architect-agent"]},
+    "L3": {"count": 4, "agents": ["langchain-orchestrator", "security-architect", "tech-expert", "master-mentor"]},
+    "L2": {"count": 9, "agents": ["data-scientist", "analyst", "developer", "devops", "qa", "product-manager", "project-manager", "business", "expert-biz-doctor"]},
+    "L1": {"count": 7, "agents": ["learning-hacker", "skill-manager", "memory-butler", "trend-forecast", "math-professor", "humanities-scholar", "wen-shi-expert"]},
+    "meta": {"count": 3, "agents": ["janitor-agent", "indexer-agent", "archiver-agent"]}
+  }
+}
