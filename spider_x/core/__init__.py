@@ -1,5 +1,4 @@
 """Spider-X Core Module"""
-
 from spider_x.core.app import create_app
 from spider_x.core.config import SpiderXConfig, load_config
 from spider_x.core.task import Task, TaskStatus, TaskPriority, registry
@@ -14,6 +13,10 @@ from spider_x.core.plugin import PluginManager, PluginState
 from spider_x.core.skill_lock import LOCKSSChecker, LockMode
 from spider_x.core.skill_gnn import SkillCombinatorGNN
 from spider_x.core.skill_kg import SkillKnowledgeGraph
+from spider_x.core.agent_registry import AgentRegistry, AgentDescriptor
+from spider_x.core.meta_agent import MetaAgent
+from spider_x.core.watchdog import WatchdogService
+from spider_x.core.event_bus import EventBus
 from spider_x.core.worker import WorkerNode, TaskSubmitter
 
 __all__ = [
@@ -26,5 +29,7 @@ __all__ = [
     "PluginManager", "PluginState",
     "LOCKSSChecker", "LockMode",
     "SkillCombinatorGNN", "SkillKnowledgeGraph",
-    "WorkerNode", "TaskSubmitter",
+    "AgentRegistry", "AgentDescriptor",
+    "MetaAgent", "WatchdogService",
+    "EventBus", "WorkerNode", "TaskSubmitter",
 ]

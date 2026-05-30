@@ -22,27 +22,20 @@ logger = logging.getLogger(__name__)
 @click.group()
 @click.version_option(version=__version__, prog_name="Spider-X")
 def main():
-    """Spider-X: Spider Swarm Worker Agent Cluster Engine."""
+    """Spider-X v2: Spider Swarm Worker Agent Cluster Engine (spider_eco integrated)."""
     pass
 
 
 @main.command()
-@click.option("--host", "-h", default="0.0.0.0", show_default=True, help="Host address to bind the server to.")
-@click.option("--port", "-p", default=8006, type=int, show_default=True, help="Port number to listen on.")
-@click.option("--config", "-c", "config_path", default=None, type=click.Path(), help="Path to a configuration file (.env or JSON).")
-@click.option("--reload", "-r", is_flag=True, default=False, help="Enable auto-reload on code changes.")
+@click.option("--host", "-h", default="0.0.0.0", show_default=True)
+@click.option("--port", "-p", default=8006, type=int, show_default=True)
+@click.option("--config", "-c", "config_path", default=None, type=click.Path())
+@click.option("--reload", "-r", is_flag=True, default=False)
 def serve(host: str, port: int, config_path: Optional[str], reload: bool):
     """Start the Spider-X API server."""
     config = load_config(config_path)
-    logger.info("Starting Spider-X server on %s:%d", host, port)
-    logger.info("Environment: %s", config.env.value)
-    uvicorn.run(
-        "spider_x.cli:_get_app",
-        host=host,
-        port=port,
-        reload=reload,
-        factory=True,
-    )
+    logger.info("Spider-X v%s starting on %s:%d (eco_integrated=True)", __version__, host, port)
+    uvicorn.run("spider_x.cli:_get_app", host=host, port=port, reload=reload, factory=True)
 
 
 def _get_app():
@@ -50,115 +43,80 @@ def _get_app():
 
 
 @main.command()
-@click.option("--rabbitmq-url", "-q", default=None, help="RabbitMQ connection URL (amqp://user:pass@host:port/vhost).")
-@click.option("--concurrency", "-c", default=4, type=int, show_default=True, help="Maximum number of concurrent tasks.")
-@click.option("--worker-id", "-w", default=None, help="Unique identifier for this worker node.")
+@click.option("--rabbitmq-url", "-q", default=None)
+@click.option("--concurrency", "-c", default=4, type=int, show_default=True)
+@click.option("--worker-id", "-w", default=None)
 def worker(rabbitmq_url: Optional[str], concurrency: int, worker_id: Optional[str]):
-    """Start a Spider-X worker node."""
+    """Start a Spider-X worker node (RabbitMQ consumer)."""
     config = load_config()
-    url = rabbitmq_url or (config.rabbitmq.url if config.rabbitmq else None)
+    url = rabbitmq_url or str(config.rabbitmq_url)
     wid = worker_id or f"worker-{os.getpid()}"
-    logger.info("Starting Spider-X worker: %s", wid)
-    logger.info("Concurrency: %d", concurrency)
-    if url:
-        logger.info("Connecting to RabbitMQ: %s", url)
-    else:
-        logger.warning("No RabbitMQ URL provided; running in standalone mode")
-    asyncio.run(_run_worker(wid, concurrency))
+    logger.info("Worker %s starting (concurrency=%d, rmq=%s)", wid, concurrency, url)
+    if not url:
+        logger.error("No RabbitMQ URL. Set SPIDER_ECO_RABBITMQ_HOST or pass --rabbitmq-url.")
+        sys.exit(1)
+    asyncio.run(_run_worker(wid, concurrency, url))
 
 
-async def _run_worker(worker_id: str, concurrency: int):
-    logger.info("Worker '%s' started (concurrency=%d)", worker_id, concurrency)
+async def _run_worker(worker_id: str, concurrency: int, rabbitmq_url: str):
+    from spider_x.core.worker import WorkerNode
+    w = WorkerNode(worker_id=worker_id, rabbitmq_url=rabbitmq_url, concurrency=concurrency)
     try:
-        while True:
-            await asyncio.sleep(1)
+        await w.start()
     except KeyboardInterrupt:
-        logger.info("Worker '%s' stopped by user", worker_id)
+        logger.info("Worker '%s' stopped", worker_id)
 
 
 @main.command()
 def version():
-    """Show version information."""
-    click.echo(f"Spider-X v{__version__}")
+    click.echo(f"Spider-X v{__version__} — spider_eco integrated")
     click.echo(f"Python {sys.version}")
-    click.echo(f"Platform: {sys.platform}")
 
 
 @main.command()
-@click.option("--config", "-c", "config_path", default=None, type=click.Path(), help="Path to a configuration file.")
+@click.option("--config", "-c", "config_path", default=None, type=click.Path())
 def config(config_path: Optional[str]):
-    """Show current configuration."""
     cfg = load_config(config_path)
     data = {
-        "env": cfg.env.value,
-        "debug": cfg.debug,
-        "log_level": cfg.log_level,
-        "api": {"host": cfg.api.host, "port": cfg.api.port},
-        "rabbitmq": {
-            "host": cfg.rabbitmq.host,
-            "port": cfg.rabbitmq.port,
-            "vhost": cfg.rabbitmq.vhost,
-        },
-        "max_concurrency": cfg.max_concurrency,
-        "plugin_dir": cfg.plugin_dir,
+        "env": cfg.env,
+        "api": {"host": cfg.api_host, "port": cfg.api_port},
+        "rabbitmq": {"host": cfg.rabbitmq_host, "port": cfg.rabbitmq_port, "vhost": cfg.rabbitmq_vhost},
+        "max_concurrency": cfg.max_concurrency, "bidding": cfg.enable_bidding,
     }
     click.echo(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 @main.command()
 @click.argument("project_dir", default=".", type=click.Path())
-@click.option("--force", "-f", is_flag=True, default=False, help="Overwrite existing files.")
+@click.option("--force", "-f", is_flag=True, default=False)
 def init(project_dir: str, force: bool):
-    """Initialize a new Spider-X project.
-
-    Creates configuration files and directory structure in PROJECT_DIR.
-    """
     base = Path(project_dir).resolve()
-    if not base.exists():
-        base.mkdir(parents=True)
-        logger.info("Created project directory: %s", base)
-
+    base.mkdir(parents=True, exist_ok=True)
     env_path = base / ".env"
-    if env_path.exists() and not force:
-        logger.warning(".env already exists; use --force to overwrite")
-    else:
+    if not env_path.exists() or force:
         env_path.write_text(
-            "SPIDER_X_ENV=development\n"
-            "SPIDER_X_DEBUG=true\n"
-            "SPIDER_X_LOG_LEVEL=INFO\n"
-            "SPIDER_X_API_HOST=0.0.0.0\n"
-            "SPIDER_X_API_PORT=8006\n"
-            "SPIDER_X_RABBITMQ_HOST=localhost\n"
-            "SPIDER_X_RABBITMQ_PORT=5672\n"
-            "SPIDER_X_RABBITMQ_USER=guest\n"
-            "SPIDER_X_RABBITMQ_PASSWORD=guest\n"
-            "SPIDER_X_RABBITMQ_VHOST=/\n",
+            "SPIDER_ECO_API_PORT=8006\n"
+            "SPIDER_ECO_RABBITMQ_HOST=localhost\n"
+            "SPIDER_ECO_RABBITMQ_PORT=5672\n"
+            "SPIDER_ECO_RABBITMQ_USER=admin\n"
+            "SPIDER_ECO_RABBITMQ_PASSWORD=admin123\n"
+            "SPIDER_ECO_RABBITMQ_VHOST=/\n",
             encoding="utf-8",
         )
-        logger.info("Created %s", env_path)
-
-    for subdir in ("skills", "plugins", "workflows"):
-        sub = base / subdir
-        if not sub.exists():
-            sub.mkdir()
-            logger.info("Created %s/", sub)
-
+    for d in ("skills", "plugins", "workflows", "data/diary"):
+        (base / d).mkdir(parents=True, exist_ok=True)
     click.echo(f"Spider-X project initialized at {base}")
 
 
 @main.command()
-@click.option("--server-url", "-u", default="http://localhost:8006", show_default=True, help="URL of the running Spider-X server.")
+@click.option("--server-url", "-u", default="http://localhost:8006", show_default=True)
 def status(server_url: str):
-    """Show system status (requires a running server)."""
     try:
         import urllib.request
-
         req = urllib.request.urlopen(f"{server_url}/health", timeout=5)
-        body = req.read().decode("utf-8")
-        data = json.loads(body)
-        click.echo(json.dumps(data, indent=2, ensure_ascii=False))
+        click.echo(json.dumps(json.loads(req.read().decode()), indent=2, ensure_ascii=False))
     except Exception as exc:
-        click.echo(f"Error connecting to server at {server_url}: {exc}", err=True)
+        click.echo(f"Error: {exc}", err=True)
         sys.exit(1)
 
 

@@ -7,3 +7,9 @@ spider_x.egg-info/
 .DS_Store
 Thumbs.db
 .env
+.idea/
+.vscode/
+*.swp
+*.swo
+data/
+logs/
