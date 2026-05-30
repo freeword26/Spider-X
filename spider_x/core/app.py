@@ -16,6 +16,9 @@ from spider_x.core.plugin import PluginManager, PluginManifest
 from spider_x.core.skill_lock import LOCKSSChecker, SkillScope
 from spider_x.core.skill_gnn import SkillCombinatorGNN
 from spider_x.core.skill_kg import SkillKnowledgeGraph
+from spider_x.core.agent_registry import AgentRegistry, AgentDescriptor
+from spider_x.core.meta_agent import MetaAgent, TaskDispatcher as MetaTaskDispatcher
+from spider_x.core.watchdog import WatchdogService, WatchdogConfig
 logger = logging.getLogger("spider_x.app")
 
 def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
@@ -36,9 +39,23 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     wuip = cfg.webui_path if cfg.webui_path and os.path.isdir(cfg.webui_path) else None
     from spider_x.core.task import registry, Task, TaskPriority, TaskStatus
 
+    # ── 新增核心服务 ──
+    agent_reg = AgentRegistry()
+    meta_agent = MetaAgent(dispatcher=MetaTaskDispatcher())
+    watchdog = WatchdogService(config=WatchdogConfig(
+        heartbeat_timeout=getattr(cfg, 'watchdog_heartbeat_timeout', 30),
+        check_interval=getattr(cfg, 'watchdog_check_interval', 10),
+        auto_restart=getattr(cfg, 'watchdog_auto_restart', True),
+    ))
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        logger.info("Spider-X starting"); yield; sched.stop(); logger.info("Spider-X stopped")
+        logger.info("Spider-X starting")
+        await watchdog.start()
+        yield
+        await watchdog.stop()
+        sched.stop()
+        logger.info("Spider-X stopped")
 
     app = FastAPI(title="Spider-X", version="1.0.0", description="蜘蛛群 - Worker智能体集群引擎", lifespan=lifespan)
 

@@ -23,6 +23,16 @@ from spider_x.core.agent_registry import (
     get_registry, call_agent, route, list_all, find,
 )
 
+from spider_x.core.meta_agent import (
+    MetaAgent, MetaTask, TaskStage,
+    TaskUnderstandingEngine, TaskDecomposer,
+    TaskDispatcher, ResultAggregator,
+)
+
+from spider_x.core.watchdog import (
+    WatchdogService, WatchdogConfig, HealthStatus, RecoveryAction,
+)
+
 from spider_x.adapters import MiniSpiderAdapter, SpiderMaxAdapter, SpiderRoomAdapter, SpiderDiaryAdapter
 from spider_x.skills import SkillManifest, register_builtin_skills, BUILTIN_SKILLS
 
@@ -42,4 +52,7 @@ __all__ = [
     "SkillManifest", "register_builtin_skills", "BUILTIN_SKILLS",
     "AgentRegistry", "AgentDescriptor", "PermissionLevel", "CollaborationMode",
     "get_registry", "call_agent", "route", "list_all", "find",
+    "MetaAgent", "MetaTask", "TaskStage",
+    "TaskUnderstandingEngine", "TaskDispatcher", "ResultAggregator",
+    "WatchdogService", "WatchdogConfig", "HealthStatus", "RecoveryAction",
 ]
