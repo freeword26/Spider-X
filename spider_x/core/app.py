@@ -1,11 +1,13 @@
 ﻿"""Spider-X Application Factory v2 — spider_eco integrated + AstrBot synergy."""
 from __future__ import annotations
-import logging, uuid
+import logging, uuid, time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, List
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 from spider_x.core.config import SpiderXConfig
 from spider_x.core.credential_chain import CredentialChainManager
 from spider_x.core.sop_engine import SOPEngine
@@ -22,6 +24,7 @@ from spider_x.core.meta_agent import MetaAgent, TaskDispatcher as MetaTaskDispat
 from spider_x.core.watchdog import WatchdogService, WatchdogConfig
 from spider_x.core.event_bus import EventBus
 from spider_x.core.role_engine import RoleEngine
+from spider_x.core.offline_skills import OfflineSkillPack
 from spider_x.core.task import registry, Task, TaskPriority, TaskStatus
 
 logger = logging.getLogger("spider_x.app")
@@ -33,6 +36,28 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
         level=getattr(logging, cfg.log_level.upper(), logging.INFO),
         format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
     )
+
+    # ── 简单的IP限流 ──────────────────────────────────
+    _rate_limit: Dict[str, list] = defaultdict(list)
+    _RATE_MAX = 60      # 每分钟最大请求数
+    _RATE_WINDOW = 60   # 窗口秒数
+
+    class RateLimitMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            client_ip = request.client.host if request.client else "unknown"
+            now = time.time()
+            window = _rate_limit[client_ip]
+            # 清理过期记录
+            _rate_limit[client_ip] = [t for t in window if now - t < _RATE_WINDOW]
+            if len(_rate_limit[client_ip]) >= _RATE_MAX:
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    {"status": "error", "error": "Rate limit exceeded. Max 60 req/min."},
+                    status_code=429,
+                )
+            _rate_limit[client_ip].append(now)
+            return await call_next(request)
+
     cred_mgr = CredentialChainManager(secret=cfg.credential_secret or "")
     sop = SOPEngine(credential_manager=cred_mgr)
     res = ResourceStateService()
@@ -50,6 +75,7 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
         heartbeat_timeout=30, check_interval=10, auto_restart=True))
     event_bus = EventBus(rabbitmq_url=cfg.rabbitmq_url)
     role_engine = RoleEngine()
+    offline_skills = OfflineSkillPack(skill_dir="./skills")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -64,8 +90,9 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
         logger.info("Spider-X v2 stopped")
 
     app = FastAPI(title="Spider-X v2", version="2.0.0",
-        description="蜘蛛群 v2 — spider_eco 功能集成 + Agent Gateway 桥接", lifespan=lifespan)
+        description="蜘蛛群 v2 — 多Agent协同引擎 + 本地/云端AI调度", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
+    app.add_middleware(RateLimitMiddleware)
 
     @app.get("/")
     async def root():
@@ -366,6 +393,67 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     @app.get("/api/v4/roles/status")
     async def role_status():
         return role_engine.get_status()
+
+    # ── Offline Skills API ──
+    @app.get("/api/v5/skills")
+    async def list_skills():
+        return {
+            "skills": offline_skills.skill_names,
+            "stats": offline_skills.get_stats(),
+        }
+
+    @app.get("/api/v5/skills/{name}")
+    async def get_skill(name: str):
+        m = offline_skills.get_manifest(name)
+        if not m:
+            raise HTTPException(404, f"Skill '{name}' not found")
+        return {"name": m.name, "version": m.version, "type": m.skill_type,
+                "size_bytes": m.size_bytes, "description": m.description}
+
+    @app.post("/api/v5/skills/{name}/execute")
+    async def execute_skill(name: str, body: dict = None):
+        result = offline_skills.execute(name, body or {})
+        return result
+
+    @app.post("/api/v5/skills/execute-all")
+    async def execute_all_skills(body: dict = None):
+        results = offline_skills.execute_all(body or {})
+        return {"results": results, "matched_count": len(results)}
+
+    @app.post("/api/v5/skills/create")
+    async def create_skill(body: dict):
+        name = body.get("name", "")
+        skill_type = body.get("type", "rule_engine")
+        rules = body.get("rules", [])
+        desc = body.get("description", "")
+        if not name or not rules:
+            raise HTTPException(400, "name and rules required")
+        path = offline_skills.create_skill(name, skill_type, rules, desc)
+        return {"created": str(path), "name": name}
+
+    @app.delete("/api/v5/skills/{name}")
+    async def delete_skill(name: str):
+        if offline_skills.delete_skill(name):
+            return {"deleted": name}
+        raise HTTPException(404, f"Skill '{name}' not found")
+
+    @app.post("/api/v5/skills/{name}/verify")
+    async def verify_skill(name: str):
+        valid = offline_skills.verify_skill(name)
+        return {"name": name, "valid": valid}
+
+    @app.get("/api/v5/skills/stats")
+    async def skill_stats():
+        return offline_skills.get_stats()
+
+    @app.get("/api/v5/skills/benchmark")
+    async def skill_benchmarks():
+        return OfflineSkillPack.performance_benchmarks()
+
+    @app.post("/api/v5/skills/{name}/benchmark")
+    async def benchmark_skill(name: str, body: dict = None):
+        result = offline_skills.benchmark(name, body or {}, iterations=body.get("iterations", 100) if body else 100)
+        return result
 
     return app
 

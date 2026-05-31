@@ -18,6 +18,8 @@ from spider_x.core.meta_agent import MetaAgent
 from spider_x.core.watchdog import WatchdogService
 from spider_x.core.event_bus import EventBus
 from spider_x.core.worker import WorkerNode, TaskSubmitter
+from spider_x.core.role_engine import RoleEngine, AIRouter
+from spider_x.core.offline_skills import OfflineSkillPack
 
 __all__ = [
     "create_app", "SpiderXConfig", "load_config",
@@ -32,4 +34,5 @@ __all__ = [
     "AgentRegistry", "AgentDescriptor",
     "MetaAgent", "WatchdogService",
     "EventBus", "WorkerNode", "TaskSubmitter",
+    "RoleEngine", "AIRouter", "OfflineSkillPack",
 ]

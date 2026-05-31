@@ -1,4 +1,5 @@
 services:
+  # ── Spider-X API 服务 ──────────────────────────────
   worker-api:
     build:
       context: .
@@ -16,10 +17,12 @@ services:
       - REDIS_PORT=6383
       - SPIDER_X_API_PORT=8006
       - TZ=Asia/Shanghai
-      # ── 角色引擎 ──
       - OLLAMA_HOST=http://host.docker.internal:11434
       - LLM_API_BASE=https://api.openai.com/v1
-      - LLM_API_KEY=
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SPIDER_X_ENV=production
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -34,7 +37,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    depends_on:
+      - worker-node
 
+  # ── Spider-X Worker 节点 ────────────────────────────
   worker-node:
     build:
       context: .
@@ -47,11 +53,10 @@ services:
       - RABBITMQ_PASS=guest
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6383
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - LLM_API_KEY=${LLM_API_KEY:-}
       - NODE_TYPE=worker
       - TZ=Asia/Shanghai
-      # ── 角色引擎 ──
-      - OLLAMA_HOST=http://host.docker.internal:11434
-      - LLM_API_KEY=
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -62,3 +67,31 @@ services:
       - "host.docker.internal:host-gateway"
     deploy:
       replicas: 2
+
+  # ── Agent Gateway ──────────────────────────────────
+  agent-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spider-x-gateway
+    restart: always
+    ports:
+      - "9100:9100"
+    environment:
+      - SPIDER_X_API_URL=http://spider-x-api:8006
+      - GATEWAY_PORT=9100
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./roles.yaml:/app/roles.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      - worker-api
