@@ -1,6 +1,7 @@
 """Test that all Spider-X modules can be imported successfully."""
 
 import pytest
+import os
 
 
 def test_core_imports():
@@ -20,15 +21,16 @@ def test_core_imports():
 
 def test_package_imports():
     import spider_x
-    assert spider_x.__version__ == "1.0.0"
+    assert spider_x.__version__ == "2.0.0"
     assert hasattr(spider_x, "create_app")
-    assert hasattr(spider_x, "CredentialChainManager")
-    assert hasattr(spider_x, "SOPEngine")
-    assert hasattr(spider_x, "ChaosScheduler")
-    assert hasattr(spider_x, "LOCKSSChecker")
-    assert hasattr(spider_x, "SkillCombinatorGNN")
-    assert hasattr(spider_x, "MiniSpiderAdapter")
-    assert hasattr(spider_x, "SpiderMaxAdapter")
+    # 验证核心模块可通过子包导入
+    from spider_x.core.credential_chain import CredentialChainManager
+    from spider_x.core.sop_engine import SOPEngine
+    from spider_x.core.chaos_scheduler import ChaosScheduler
+    from spider_x.core.skill_lock import LOCKSSChecker
+    from spider_x.core.skill_gnn import SkillCombinatorGNN
+    from spider_x.adapters import MiniSpiderAdapter, SpiderMaxAdapter
+    from spider_x.adapters.spider_eco_diary import SpiderEcoDiaryAdapter
 
 
 def test_config_defaults():
@@ -39,11 +41,13 @@ def test_config_defaults():
     assert cfg.log_level == "INFO"
 
 
-def test_config_from_env(monkeypatch):
-    monkeypatch.setenv("SPIDER_X_API_PORT", "9090")
+def test_config_from_env():
+    import os
+    os.environ["SPIDER_ECO_API_PORT"] = "9090"
     from spider_x.core.config import load_config
     cfg = load_config(env_file="/nonexistent/.env")
     assert cfg.api_port == 9090
+    del os.environ["SPIDER_ECO_API_PORT"]
 
 
 def test_adapters_import():
