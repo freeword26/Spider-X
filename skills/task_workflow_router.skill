@@ -1,0 +1,19 @@
+{
+  "name": "task_workflow_router",
+  "version": "1.0",
+  "type": "decision_tree",
+  "description": "任务路由工作流: 根据任务类型自动分配最优执行路径",
+  "author": "Spider-X",
+  "rules": [
+    {"condition": "task_type == 'code' and complexity == 'simple'", "action": "route_local_code", "reason": "简单代码任务 → 本地 codellama"},
+    {"condition": "task_type == 'code' and complexity == 'complex'", "action": "route_cloud_architect", "reason": "复杂架构 → 云端 GPT-4o"},
+    {"condition": "task_type == 'research' and urgency == 'high'", "action": "route_parallel", "reason": "紧急研究 → 本地+云端并行"},
+    {"condition": "task_type == 'data' and data_size_mb < 100", "action": "route_local_analyst", "reason": "小数据集 → 本地 qwen"},
+    {"condition": "task_type == 'data' and data_size_mb >= 100", "action": "route_cloud_analyst", "reason": "大数据集 → 云端分析"},
+    {"condition": "task_type == 'creative' and budget == 'low'", "action": "route_local_creative", "reason": "低预算创作 → 本地模型"},
+    {"condition": "task_type == 'creative' and budget != 'low'", "action": "route_cloud_writer", "reason": "高质量创作 → 云端 GPT-4"},
+    {"condition": "task_type == 'security'", "action": "route_security_expert", "reason": "安全任务 → 专用安全专家"},
+    {"condition": "default", "action": "route_default", "reason": "默认路由 → 系统管理器"}
+  ],
+  "created_at": "2026-05-31T00:00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "code_debug_helper",
+  "version": "1.0",
+  "type": "rule_engine",
+  "description": "代码调试能力包: 常见错误模式匹配与修复建议 (3.2MB等价逻辑)",
+  "author": "Spider-X",
+  "rules": [
+    {"name": "syntax_error", "pattern": "SyntaxError|IndentationError|Expected", "action": "check_syntax", "weight": 1.0},
+    {"name": "import_error", "pattern": "ImportError|ModuleNotFoundError|No module named", "action": "install_dependency", "weight": 0.95},
+    {"name": "type_error", "pattern": "TypeError|Cannot convert|unsupported operand", "action": "check_types", "weight": 0.9},
+    {"name": "null_pointer", "pattern": "NoneType|AttributeError.*None|null pointer", "action": "add_null_check", "weight": 0.9},
+    {"name": "index_error", "pattern": "IndexError|list index out of range|KeyError", "action": "add_boundary_check", "weight": 0.85},
+    {"name": "performance", "pattern": "slow|timeout|performance|O\\(n\\^2\\)|nested loop", "action": "optimize_algorithm", "weight": 0.7},
+    {"name": "security", "pattern": "SQL injection|XSS|eval\\(|exec\\(|pickle\\.loads", "action": "security_review", "weight": 0.95}
+  ],
+  "created_at": "2026-05-31T00:00:00"
+}

@@ -329,17 +329,17 @@ class OfflineSkillPack:
 
     def verify_skill(self, name: str) -> bool:
         """验证能力包签名."""
-        m = self.manifests.get(name)
-        if not m or not m.signature:
-            return False
         path = self._skill_dir / f"{name}.skill"
         if not path.exists():
             return False
-        data = json.loads(path.read_text(encoding="utf-8"))
-        stored_sig = data.pop("signature", "")
-        content = json.dumps(data, sort_keys=True).encode()
-        computed = hashlib.sha256(content).hexdigest()[:16]
-        return computed == stored_sig
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            stored_sig = data.pop("signature", "")
+            content = json.dumps(data, sort_keys=True).encode()
+            computed = hashlib.sha256(content).hexdigest()[:16]
+            return computed == stored_sig
+        except Exception:
+            return False
 
     def delete_skill(self, name: str) -> bool:
         """删除能力包."""
@@ -350,6 +350,13 @@ class OfflineSkillPack:
         self.manifests.pop(name, None)
         self._execution_stats.pop(name, None)
         return True
+
+    def reload(self) -> int:
+        """重新加载所有能力包."""
+        self.skills.clear()
+        self.manifests.clear()
+        self._execution_stats.clear()
+        return self._discover_skills()
 
     # ── 基准测试 ─────────────────────────────────────
 

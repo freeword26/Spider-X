@@ -1,0 +1,17 @@
+{
+  "name": "legal_clause_matching",
+  "version": "1.0",
+  "type": "rule_engine",
+  "description": "法律条款匹配能力包: 合同/协议关键条款识别与风险标注 (6.1MB等价逻辑)",
+  "author": "Spider-X",
+  "rules": [
+    {"name": "liability_cap", "pattern": "责任限制|赔偿上限|liability cap|damages limitation", "action": "flag_liability", "weight": 1.0},
+    {"name": "termination", "pattern": "终止|解除|termination|breach|cause", "action": "flag_termination", "weight": 0.95},
+    {"name": "confidentiality", "pattern": "保密|机密|confidential|NDA|non-disclosure", "action": "flag_confidentiality", "weight": 0.9},
+    {"name": "ip_rights", "pattern": "知识产权|著作权|专利|商标|intellectual property|IP rights", "action": "flag_ip", "weight": 0.9},
+    {"name": "gdpr_privacy", "pattern": "GDPR|个人信息|隐私|privacy|data protection|PII", "action": "flag_privacy", "weight": 0.85},
+    {"name": "payment_terms", "pattern": "付款|金额|invoice|payment|费用|fee|price", "action": "flag_payment", "weight": 0.7},
+    {"name": "dispute_resolution", "pattern": "争议|仲裁|诉讼|jurisdiction|arbitration|dispute", "action": "flag_dispute", "weight": 0.8}
+  ],
+  "created_at": "2026-05-31T00:00:00"
+}
