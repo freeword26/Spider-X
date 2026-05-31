@@ -72,7 +72,7 @@ services:
   agent-gateway:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.gateway
     container_name: spider-x-gateway
     restart: always
     ports:

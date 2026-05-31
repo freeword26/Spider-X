@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    redis-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY spider_x/ ./spider_x/
+COPY config/ ./config/
+COPY roles.yaml ./
+COPY pyproject.toml .
+COPY agent_gateway.py ./
+
+RUN pip install --no-cache-dir -e .
+
+RUN mkdir -p /app/data /app/logs
+
+EXPOSE 9100
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:9100/health || exit 1
+
+CMD ["uvicorn", "spider_x.agent_gateway:app", "--host", "0.0.0.0", "--port", "9100"]

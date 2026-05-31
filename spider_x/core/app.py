@@ -58,7 +58,7 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
             _rate_limit[client_ip].append(now)
             return await call_next(request)
 
-    cred_mgr = CredentialChainManager(secret=cfg.credential_secret or "")
+    cred_mgr = CredentialChainManager(secret=cfg.api_key or "spider-x-default-secret")
     sop = SOPEngine(credential_manager=cred_mgr)
     res = ResourceStateService()
     dec = TaskDecomposer()
