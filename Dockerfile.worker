@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY spider_x/ ./spider_x/
 COPY config/ ./config/
+COPY roles.yaml ./
 COPY pyproject.toml .
 COPY README.md .
 

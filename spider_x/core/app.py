@@ -21,6 +21,7 @@ from spider_x.core.agent_registry import AgentRegistry
 from spider_x.core.meta_agent import MetaAgent, TaskDispatcher as MetaTaskDispatcher
 from spider_x.core.watchdog import WatchdogService, WatchdogConfig
 from spider_x.core.event_bus import EventBus
+from spider_x.core.role_engine import RoleEngine
 from spider_x.core.task import registry, Task, TaskPriority, TaskStatus
 
 logger = logging.getLogger("spider_x.app")
@@ -48,6 +49,7 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     watchdog = WatchdogService(config=WatchdogConfig(
         heartbeat_timeout=30, check_interval=10, auto_restart=True))
     event_bus = EventBus(rabbitmq_url=cfg.rabbitmq_url)
+    role_engine = RoleEngine()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -299,6 +301,71 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     @app.get("/api/v3/watchdog/health")
     async def wd_health():
         return watchdog.get_health_report()
+
+    # ── Role Engine API ──
+    @app.get("/api/v4/roles")
+    async def list_roles(role_type: str = ""):
+        if role_type:
+            return [{"role_id": r.role_id, "type": r.type, "provider": r.provider,
+                      "model": r.model, "agent_id": r.agent_id, "capabilities": r.capabilities,
+                      "priority": r.priority, "cost_factor": r.cost_factor}
+                     for r in role_engine.list_roles(role_type)]
+        return [{"role_id": r.role_id, "type": r.type, "provider": r.provider,
+                  "model": r.model, "agent_id": r.agent_id, "capabilities": r.capabilities,
+                  "priority": r.priority, "cost_factor": r.cost_factor}
+                 for r in role_engine.list_roles()]
+
+    @app.get("/api/v4/roles/{role_id}")
+    async def get_role(role_id: str):
+        r = role_engine.get_role(role_id)
+        if not r:
+            raise HTTPException(404, f"Role '{role_id}' not found")
+        return {"role_id": r.role_id, "type": r.type, "provider": r.provider,
+                "model": r.model, "agent_id": r.agent_id, "capabilities": r.capabilities,
+                "priority": r.priority, "cost_factor": r.cost_factor}
+
+    @app.get("/api/v4/roles/by-agent/{agent_id}")
+    async def get_role_by_agent(agent_id: str):
+        r = role_engine.get_role_by_agent(agent_id)
+        if not r:
+            raise HTTPException(404, f"No role found for agent '{agent_id}'")
+        return {"role_id": r.role_id, "type": r.type, "provider": r.provider,
+                "model": r.model, "agent_id": r.agent_id, "capabilities": r.capabilities}
+
+    @app.get("/api/v4/roles/by-capability/{capability}")
+    async def find_roles_by_capability(capability: str):
+        return [{"role_id": r.role_id, "type": r.type, "provider": r.provider, "model": r.model}
+                for r in role_engine.find_by_capability(capability)]
+
+    @app.post("/api/v4/roles/execute")
+    async def execute_role(body: dict):
+        role_id = body.get("role_id", "")
+        prompt = body.get("prompt", "")
+        context = body.get("context")
+        if not role_id or not prompt:
+            raise HTTPException(400, "role_id and prompt are required")
+        result = await role_engine.execute(role_id, prompt, context)
+        return result
+
+    @app.get("/api/v4/roles/local")
+    async def list_local_roles():
+        return [{"role_id": r.role_id, "model": r.model, "provider": r.provider}
+                for r in role_engine.list_roles("local")]
+
+    @app.get("/api/v4/roles/cloud")
+    async def list_cloud_roles():
+        return [{"role_id": r.role_id, "provider": r.provider, "model": r.model,
+                  "cost_factor": r.cost_factor}
+                for r in role_engine.list_roles("cloud")]
+
+    @app.post("/api/v4/roles/reload")
+    async def reload_roles():
+        count = role_engine.reload()
+        return {"reloaded": count}
+
+    @app.get("/api/v4/roles/status")
+    async def role_status():
+        return role_engine.get_status()
 
     return app
 

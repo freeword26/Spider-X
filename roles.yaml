@@ -1,0 +1,148 @@
+# Spider-X 角色定义
+# 本地AI角色 → 通过 Ollama/vLLM 本地推理执行
+# 云端AI角色 → 通过 API 网关（Claude/GPT/Qwen等）执行
+
+roles:
+  # ── 本地AI角色 ──────────────────────────────────────
+  code_engineer:
+    type: local
+    provider: ollama
+    model: codellama:7b
+    agent_id: developer
+    capabilities:
+      - code_generation
+      - code_review
+      - debugging
+      - refactoring
+    priority: high
+    cost_factor: 0.0
+
+  data_analyst:
+    type: local
+    provider: ollama
+    model: qwen:14b
+    agent_id: data-scientist
+    capabilities:
+      - data_analysis
+      - visualization
+      - report_generation
+      - statistical_modeling
+    priority: medium
+    cost_factor: 0.0
+
+  local_researcher:
+    type: local
+    provider: ollama
+    model: llama3:70b
+    agent_id: tech-expert
+    capabilities:
+      - technical_research
+      - document_analysis
+      - code_indexing
+    priority: medium
+    cost_factor: 0.0
+
+  # ── 云端AI角色 ─────────────────────────────────────
+  research_assistant:
+    type: cloud
+    provider: anthropic
+    model: claude-3-opus
+    agent_id: analyst
+    capabilities:
+      - web_research
+      - information_gathering
+      - fact_checking
+      - deep_analysis
+    priority: high
+    cost_factor: 1.0
+
+  creative_writer:
+    type: cloud
+    provider: openai
+    model: gpt-4-turbo
+    agent_id: humanities-scholar
+    capabilities:
+      - content_creation
+      - copywriting
+      - storytelling
+      - translation
+    priority: medium
+    cost_factor: 0.8
+
+  social_media_manager:
+    type: cloud
+    provider: anthropic
+    model: claude-3-sonnet
+    agent_id: business
+    capabilities:
+      - social_content
+      - engagement_strategy
+      - trend_analysis
+      - audience_insights
+    priority: low
+    cost_factor: 0.5
+
+  cloud_architect:
+    type: cloud
+    provider: openai
+    model: gpt-4o
+    agent_id: architect-agent
+    capabilities:
+      - architecture_design
+      - system_planning
+      - tech_evaluation
+      - migration_planning
+    priority: high
+    cost_factor: 0.9
+
+  security_expert:
+    type: cloud
+    provider: anthropic
+    model: claude-3-haiku
+    agent_id: security-architect
+    capabilities:
+      - security_audit
+      - vulnerability_scan
+      - compliance_check
+      - threat_modeling
+    priority: high
+    cost_factor: 0.4
+
+  code_reviewer:
+    type: cloud
+    provider: openai
+    model: gpt-4o-mini
+    agent_id: qa
+    capabilities:
+      - code_review
+      - best_practices
+      - performance_analysis
+      - security_check
+    priority: medium
+    cost_factor: 0.3
+
+  project_planner:
+    type: cloud
+    provider: anthropic
+    model: claude-3-sonnet
+    agent_id: project-manager
+    capabilities:
+      - task_planning
+      - resource_estimation
+      - risk_assessment
+      - milestone_tracking
+    priority: medium
+    cost_factor: 0.5
+
+  # ── 编排角色（控制流，不作为独立推理） ──────────────
+  orchestrator:
+    type: local
+    provider: builtin
+    model: dag_scheduler
+    agent_id: system-manager
+    capabilities:
+      - task_decomposition
+      - agent_dispatch
+      - result_aggregation
+    priority: critical
+    cost_factor: 0.0

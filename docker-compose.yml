@@ -16,11 +16,16 @@ services:
       - REDIS_PORT=6383
       - SPIDER_X_API_PORT=8006
       - TZ=Asia/Shanghai
+      # ── 角色引擎 ──
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - LLM_API_BASE=https://api.openai.com/v1
+      - LLM_API_KEY=
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./spider_x:/app/spider_x:ro
       - ./config:/app/config:ro
+      - ./roles.yaml:/app/roles.yaml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -44,11 +49,15 @@ services:
       - REDIS_PORT=6383
       - NODE_TYPE=worker
       - TZ=Asia/Shanghai
+      # ── 角色引擎 ──
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - LLM_API_KEY=
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./spider_x:/app/spider_x:ro
       - ./config:/app/config:ro
+      - ./roles.yaml:/app/roles.yaml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     deploy:
