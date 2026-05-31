@@ -14,7 +14,7 @@ from spider_x.core.skill_lock import LOCKSSChecker, LockMode
 from spider_x.core.skill_gnn import SkillCombinatorGNN
 from spider_x.core.skill_kg import SkillKnowledgeGraph
 from spider_x.core.agent_registry import AgentRegistry, AgentDescriptor
-from spider_x.core.meta_agent import MetaAgent
+from spider_x.core.meta_agent import MetaTask, TaskStage, ResultAggregator
 from spider_x.core.watchdog import WatchdogService
 from spider_x.core.event_bus import EventBus
 from spider_x.core.worker import WorkerNode, TaskSubmitter

@@ -4,11 +4,7 @@ from spider_x.core.agent_registry import (
     AgentRegistry, AgentDescriptor, PermissionLevel, CollaborationMode,
     get_registry, find_agents_by_skill, find_agents_by_keyword,
 )
-from spider_x.core.meta_agent import (
-    MetaAgent, MetaTask, TaskStage,
-    TaskUnderstandingEngine, TaskDecomposer,
-    TaskDispatcher, ResultAggregator,
-)
+from spider_x.core.meta_agent import MetaTask, TaskStage, ResultAggregator
 from spider_x.core.watchdog import (
     WatchdogService, WatchdogConfig, HealthStatus, RecoveryAction,
 )
@@ -114,62 +110,12 @@ class TestAgentRegistry:
 
 # ── Meta-Agent Tests ──
 
-class TestTaskUnderstandingEngine:
-    def test_understand_research(self):
-        engine = TaskUnderstandingEngine()
-        result = engine.understand("帮我调研最新的AI技术趋势")
-        assert result["primary_type"] == "research"
-
-    def test_understand_code(self):
-        engine = TaskUnderstandingEngine()
-        result = engine.understand("开发一个用户登录API")
-        assert result["primary_type"] == "code"
-
-    def test_understand_deploy(self):
-        engine = TaskUnderstandingEngine()
-        result = engine.understand("部署应用到生产环境")
-        assert result["primary_type"] == "deploy"
-
-    def test_complexity_scoring(self):
-        engine = TaskUnderstandingEngine()
-        simple = engine.understand("打印hello")
-        long_text = ("开发一个完整的电商系统，包括用户管理、订单处理、支付集成、库存管理、物流跟踪、"
-                      "客服系统、数据分析、推荐引擎，并且要部署到Kubernetes集群，配置CI/CD流水线，"
-                      "还要做数据迁移和性能调优，同时需要实现多租户架构和分布式缓存，"
-                      "并且要做安全审计和压力测试，以及实现国际化支持")
-        complex_task = engine.understand(long_text)
-        assert complex_task["complexity"] > simple["complexity"]
-        assert complex_task["requires_decomposition"] is True
-
-    def test_complexity_low(self):
-        engine = TaskUnderstandingEngine()
-        result = engine.understand("打印hello")
-        assert result["complexity"] < 0.5
-
-
-class TestTaskDecomposer:
-    def test_decompose_research(self):
-        decomposer = TaskDecomposer()
-        result = decomposer.decompose({"primary_type": "research", "requires_decomposition": True})
-        assert len(result) >= 3
-
-    def test_decompose_code(self):
-        decomposer = TaskDecomposer()
-        result = decomposer.decompose({"primary_type": "code", "requires_decomposition": True})
-        assert len(result) == 4
-
-    def test_decompose_simple(self):
-        decomposer = TaskDecomposer()
-        result = decomposer.decompose({"primary_type": "research", "requires_decomposition": False})
-        assert len(result) == 1
-
-
 class TestResultAggregator:
     def test_all_completed(self):
         agg = ResultAggregator()
         result = agg.aggregate([
-            {"status": "completed", "output": "ok1"},
-            {"status": "completed", "output": "ok2"},
+            {"status": "ok", "response": "ok1"},
+            {"status": "ok", "response": "ok2"},
         ])
         assert result["status"] == "completed"
         assert result["completed"] == 2
@@ -177,8 +123,8 @@ class TestResultAggregator:
     def test_partial(self):
         agg = ResultAggregator()
         result = agg.aggregate([
-            {"status": "completed", "output": "ok"},
-            {"status": "failed", "output": "fail"},
+            {"status": "ok", "response": "ok"},
+            {"status": "error", "response": "fail"},
         ])
         assert result["status"] == "partial"
 
@@ -187,32 +133,23 @@ class TestResultAggregator:
         result = agg.aggregate([])
         assert result["status"] == "empty"
 
+    def test_all_completed(self):
+        agg = ResultAggregator()
+        result = agg.aggregate([
+            {"status": "ok", "response": "ok1"},
+            {"status": "ok", "response": "ok2"},
+        ])
+        assert result["status"] == "completed"
+        assert result["completed"] == 2
 
-class TestMetaAgent:
-    @pytest.mark.asyncio
-    async def test_submit_simple_task(self):
-        agent = MetaAgent()
-        result = await agent.submit_task("帮我调研Python异步编程")
-        assert result.task_id is not None
-        assert result.stage == TaskStage.COMPLETE
-        assert len(result.subtasks) > 0
+    def test_partial(self):
+        agg = ResultAggregator()
+        result = agg.aggregate([
+            {"status": "ok", "response": "ok"},
+            {"status": "error", "response": "fail"},
+        ])
+        assert result["status"] == "partial"
 
-    @pytest.mark.asyncio
-    async def test_submit_code_task(self):
-        agent = MetaAgent()
-        result = await agent.submit_task("实现一个REST API")
-        assert result.stage == TaskStage.COMPLETE
-        assert any(st.action == "code" for st in result.subtasks)
-
-    def test_get_task_status(self):
-        agent = MetaAgent()
-        agent._active_tasks["t1"] = MetaTask(task_id="t1", raw_input="test", task_type="research")
-        status = agent.get_task_status("t1")
-        assert status is not None
-        assert status["task_id"] == "t1"
-
-
-# ── Watchdog Tests ──
 
 class TestWatchdogService:
     def test_register_and_heartbeat(self):

@@ -20,7 +20,7 @@ from spider_x.core.skill_lock import LOCKSSChecker
 from spider_x.core.skill_gnn import SkillCombinatorGNN
 from spider_x.core.skill_kg import SkillKnowledgeGraph
 from spider_x.core.agent_registry import AgentRegistry
-from spider_x.core.meta_agent import MetaAgent, TaskDispatcher as MetaTaskDispatcher
+from spider_x.core.meta_agent import ResultAggregator
 from spider_x.core.watchdog import WatchdogService, WatchdogConfig
 from spider_x.core.event_bus import EventBus
 from spider_x.core.role_engine import RoleEngine
@@ -70,7 +70,7 @@ def create_app(config: Optional[SpiderXConfig] = None) -> FastAPI:
     sgnn = SkillCombinatorGNN()
     skg = SkillKnowledgeGraph(neo4j_uri=cfg.neo4j_uri, neo4j_user=cfg.neo4j_user, neo4j_password=cfg.neo4j_password)
     agent_reg = AgentRegistry()
-    meta_agent = MetaAgent(dispatcher=MetaTaskDispatcher())
+    result_aggregator = ResultAggregator()
     watchdog = WatchdogService(config=WatchdogConfig(
         heartbeat_timeout=30, check_interval=10, auto_restart=True))
     event_bus = EventBus(rabbitmq_url=cfg.rabbitmq_url)
